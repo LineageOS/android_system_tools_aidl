@@ -215,6 +215,8 @@ class AidlMethod : public AidlMember {
   bool HasId() const { return has_id_; }
   int GetId() { return id_; }
   void SetId(unsigned id) { id_ = id; }
+  bool IsDeduplicate() const { return deduplicate_; }
+  void SetDeduplicate(bool deduplicate) { deduplicate_ = deduplicate; }
 
   const std::vector<std::unique_ptr<AidlArgument>>& GetArguments() const {
     return arguments_;
@@ -240,6 +242,7 @@ class AidlMethod : public AidlMember {
   std::vector<const AidlArgument*> out_arguments_;
   bool has_id_;
   int id_;
+  bool deduplicate_;
 
   DISALLOW_COPY_AND_ASSIGN(AidlMethod);
 };

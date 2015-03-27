@@ -313,6 +313,12 @@ static void generate_method(const AidlMethod& method, Class* interface,
   string transactCodeName = "TRANSACTION_";
   transactCodeName += method.GetName();
 
+  if (method.IsDeduplicate()) {
+    char tmp[16];
+    sprintf(tmp, "_%d", index);
+    transactCodeName += tmp;
+  }
+
   char transactCodeValue[60];
   sprintf(transactCodeValue, "(android.os.IBinder.FIRST_CALL_TRANSACTION + %d)",
           index);

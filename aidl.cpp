@@ -235,11 +235,18 @@ int check_types(const string& filename,
     if (it == method_names.end()) {
       method_names[m->GetName()] = m.get();
     } else {
-      cerr << filename << ":" << m->GetLine()
-           << " attempt to redefine method " << m->GetName() << "," << endl
-           << filename << ":" << it->second->GetLine()
-           << "    previously defined here." << endl;
-      err = 1;
+      if (m->HasId()) {
+        cerr << filename << ":" << m->GetLine()
+             << " redefining method " << m->GetName() << endl;
+        m->SetDeduplicate(true);
+        method_names[m->GetName()] = m.get();
+      } else {
+        cerr << filename << ":" << m->GetLine()
+             << " attempt to redefine method " << m->GetName() << "," << endl
+             << filename << ":" << it->second->GetLine()
+             << "    previously defined here." << endl;
+        err = 1;
+      }
     }
   }
   return err;
@@ -646,10 +653,6 @@ AidlError load_and_validate_aidl(
     }
   }
 
-  // check the referenced types in parsed_doc to make sure we've imported them
-  if (check_types(input_file_name, interface.get(), types) != 0) {
-    err = AidlError::BAD_TYPE;
-  }
   if (err != AidlError::OK) {
     return err;
   }
@@ -662,6 +665,11 @@ AidlError load_and_validate_aidl(
   }
   if (!validate_constants(*interface)) {
     return AidlError::BAD_CONSTANTS;
+  }
+
+  // check the referenced types in parsed_doc to make sure we've imported them
+  if (check_types(input_file_name, interface.get(), types) != 0) {
+    return AidlError::BAD_TYPE;
   }
 
   if (returned_interface)
