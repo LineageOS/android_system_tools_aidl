@@ -389,7 +389,7 @@ class InterfaceType : public Type {
   InterfaceType(const JavaTypeNamespace* types, const std::string& package,
                 const std::string& name, bool builtIn, bool oneway,
                 const std::string& declFile, int declLine, const Type* stub,
-                const Type* proxy);
+                const Type* proxy, const Type* no_op);
 
   bool OneWay() const;
 
@@ -400,11 +400,13 @@ class InterfaceType : public Type {
   const ValidatableType* NullableType() const override { return this; }
   const Type* GetStub() const { return stub_; }
   const Type* GetProxy() const { return proxy_; }
+  const Type* GetNoOp() const { return no_op_; }
 
  private:
   bool m_oneway;
   const Type* stub_;
   const Type* proxy_;
+  const Type* no_op_;
 };
 
 class ClassLoaderType : public Type {
