@@ -56,8 +56,8 @@ namespace java {
 
 int generate_java(const string& filename, const string& originalSrc,
                   AidlInterface* iface, JavaTypeNamespace* types,
-                  const IoDelegate& io_delegate) {
-  Class* cl = generate_binder_interface_class(iface, types);
+                  const IoDelegate& io_delegate, unsigned int flags) {
+  Class* cl = generate_binder_interface_class(iface, types, flags);
 
   Document* document = new Document(
       "" /* no comment */,

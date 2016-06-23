@@ -55,6 +55,7 @@ class JavaOptions final {
   bool auto_dep_file_{false};
   bool dep_file_ninja_{false};
   std::vector<std::string> files_to_preprocess_;
+  bool generate_no_op_methods_{false};
 
  private:
   JavaOptions() = default;
