@@ -741,8 +741,13 @@ int compile_aidl_to_java(const JavaOptions& options,
     return 1;
   }
 
+  unsigned int flags = 0;
+  if (options.generate_no_op_methods_) {
+    flags |= GENERATE_NO_OP_CLASS;
+  }
+
   return generate_java(output_file_name, options.input_file_name_.c_str(),
-                       interface.get(), types.get(), io_delegate);
+                       interface.get(), types.get(), io_delegate, flags);
 }
 
 bool preprocess_aidl(const JavaOptions& options,

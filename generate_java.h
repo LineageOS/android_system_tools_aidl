@@ -32,10 +32,11 @@ class JavaTypeNamespace;
 
 int generate_java(const std::string& filename, const std::string& originalSrc,
                   AidlInterface* iface, java::JavaTypeNamespace* types,
-                  const IoDelegate& io_delegate);
+                  const IoDelegate& io_delegate, unsigned int flags);
 
 android::aidl::java::Class* generate_binder_interface_class(
-    const AidlInterface* iface, java::JavaTypeNamespace* types);
+    const AidlInterface* iface, java::JavaTypeNamespace* types,
+    unsigned int flags);
 
 }  // namespace java
 
@@ -58,5 +59,8 @@ class VariableFactory {
 
 }  // namespace android
 }  // namespace aidl
+
+// Flags that can be passed to generate_java
+#define GENERATE_NO_OP_CLASS 1 << 0
 
 #endif // AIDL_GENERATE_JAVA_H_
