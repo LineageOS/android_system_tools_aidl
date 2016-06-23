@@ -682,13 +682,15 @@ void UserDataArrayType::ReadFromParcel(StatementBlock* addTo, Variable* v,
 InterfaceType::InterfaceType(const JavaTypeNamespace* types,
                              const string& package, const string& name,
                              bool builtIn, bool oneway, const string& declFile,
-                             int declLine, const Type* stub, const Type* proxy)
+                             int declLine, const Type* stub, const Type* proxy,
+                             const Type* no_op)
     : Type(types, package, name, builtIn ? ValidatableType::KIND_BUILT_IN
                                          : ValidatableType::KIND_INTERFACE,
            true, false, declFile, declLine),
       m_oneway(oneway),
       stub_(stub),
-      proxy_(proxy) {}
+      proxy_(proxy),
+      no_op_(no_op) {}
 
 bool InterfaceType::OneWay() const { return m_oneway; }
 
@@ -877,14 +879,20 @@ bool JavaTypeNamespace::AddBinderType(const AidlInterface& b,
                          b.GetName() + ".Stub.Proxy",
                          ValidatableType::KIND_GENERATED,
                          false, false, filename, b.GetLine());
+  Type* no_op = new Type(this, b.GetPackage(),
+                         b.GetName() + ".NoOp",
+                         ValidatableType::KIND_GENERATED,
+                         false, false, filename, b.GetLine());
+
   Type* type =
       new InterfaceType(this, b.GetPackage(), b.GetName(), false,
-                        b.IsOneway(), filename, b.GetLine(), stub, proxy);
+                        b.IsOneway(), filename, b.GetLine(), stub, proxy, no_op);
 
   bool success = true;
   success &= Add(type);
   success &= Add(stub);
   success &= Add(proxy);
+  success &= Add(no_op);
   return success;
 }
 

@@ -56,6 +56,7 @@ class JavaOptions final {
   bool dep_file_ninja_{false};
   bool gen_traces_{false};
   std::vector<std::string> files_to_preprocess_;
+  bool generate_no_op_methods_{false};
 
   // The following are for testability, but cannot be influenced on the command line.
 

@@ -284,6 +284,36 @@ ProxyClass::ProxyClass(const JavaTypeNamespace* types, const Type* type,
 ProxyClass::~ProxyClass() {}
 
 // =================================================
+class DefaultNoOpClass : public Class {
+ public:
+  DefaultNoOpClass(const JavaTypeNamespace* types, const Type* type,
+             const InterfaceType* interfaceType);
+  virtual ~DefaultNoOpClass();
+};
+
+DefaultNoOpClass::DefaultNoOpClass(const JavaTypeNamespace* types, const Type* type,
+                                   const InterfaceType* interfaceType)
+    : Class() {
+  this->comment = "/** No-Op implementation  */";
+  this->comment += "\n/** @hide */";
+  this->modifiers = PUBLIC | STATIC;
+  this->what = Class::CLASS;
+  this->type = type;
+  this->interfaces.push_back(interfaceType);
+
+  // IBinder asBinder()
+  Method* asBinder = new Method;
+  asBinder->modifiers = PUBLIC | OVERRIDE;
+  asBinder->returnType = types->IBinderType();
+  asBinder->name = "asBinder";
+  asBinder->statements = new StatementBlock;
+  asBinder->statements->Add(new ReturnStatement(NULL_VALUE));
+  this->elements.push_back(asBinder);
+}
+
+DefaultNoOpClass::~DefaultNoOpClass() {}
+
+// =================================================
 static void generate_new_array(const Type* t, StatementBlock* addTo,
                                Variable* v, Variable* parcel,
                                JavaTypeNamespace* types) {
@@ -673,11 +703,25 @@ static std::unique_ptr<Method> generate_proxy_method(
   return proxy;
 }
 
+static bool is_numeric_java_type(const std::string name) {
+  static const char* KEYWORDS[] = { "int", "byte", "char", "float", "double",
+    "short", "long", NULL };
+  const char** k = KEYWORDS;
+  while (*k) {
+    if (name == *k) {
+      return true;
+    }
+    k++;
+  }
+  return false;
+}
+
 static void generate_methods(const AidlInterface& iface,
                              const AidlMethod& method,
                              Class* interface,
                              StubClass* stubClass,
                              ProxyClass* proxyClass,
+                             DefaultNoOpClass *noOpClass,
                              int index,
                              JavaTypeNamespace* types) {
   const bool oneway = proxyClass->mOneWay || method.IsOneway();
@@ -695,6 +739,38 @@ static void generate_methods(const AidlInterface& iface,
   // == the declaration in the interface ===================================
   Method* decl = generate_interface_method(method, types).release();
   interface->elements.push_back(decl);
+
+  // == the no-op method ===================================================
+  if (noOpClass != NULL) {
+    Method* noOpMethod = new Method;
+    noOpMethod->comment = method.GetComments();
+    noOpMethod->modifiers = OVERRIDE | PUBLIC;
+    noOpMethod->returnType = method.GetType().GetLanguageType<Type>();
+    noOpMethod->returnTypeDimension = method.GetType().IsArray() ? 1 : 0;
+    noOpMethod->name = method.GetName();
+    noOpMethod->statements = new StatementBlock;
+    for (const std::unique_ptr<AidlArgument>& arg : method.GetArguments()) {
+      noOpMethod->parameters.push_back(
+          new Variable(arg->GetType().GetLanguageType<Type>(), arg->GetName(),
+                       arg->GetType().IsArray() ? 1 : 0));
+    }
+
+    std::string typeName = method.GetType().GetLanguageType<Type>()->JavaType();
+    if (typeName != "void") {
+      bool isNumeric = is_numeric_java_type(typeName);
+      bool isBoolean = typeName == "boolean";
+
+      if (isNumeric && !method.GetType().IsArray()) {
+        noOpMethod->statements->Add(new ReturnStatement(new LiteralExpression("0")));
+      } else if (isBoolean && !method.GetType().IsArray()) {
+        noOpMethod->statements->Add(new ReturnStatement(FALSE_VALUE));
+      } else {
+        noOpMethod->statements->Add(new ReturnStatement(NULL_VALUE));
+      }
+    }
+    noOpMethod->exceptions.push_back(types->RemoteExceptionType());
+    noOpClass->elements.push_back(noOpMethod);
+  }
 
   // == the stub method ====================================================
   bool outline_stub = stubClass->transact_outline &&
@@ -793,6 +869,14 @@ Class* generate_binder_interface_class(const AidlInterface* iface,
   interface->type = interfaceType;
   interface->interfaces.push_back(types->IInterfaceType());
 
+  // the No-Op inner class
+  DefaultNoOpClass* noOpClass = NULL;
+  if (options.generate_no_op_methods_) {
+    noOpClass =
+      new DefaultNoOpClass(types, interfaceType->GetNoOp(), interfaceType);
+    interface->elements.push_back(noOpClass);
+  }
+
   // the stub inner class
   StubClass* stub =
       new StubClass(interfaceType->GetStub(), interfaceType, types);
@@ -827,6 +911,7 @@ Class* generate_binder_interface_class(const AidlInterface* iface,
                      interface,
                      stub,
                      proxy,
+                     noOpClass,
                      item->GetId(),
                      types);
   }
