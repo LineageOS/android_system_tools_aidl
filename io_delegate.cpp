@@ -208,6 +208,16 @@ static void add_list_files(const string& dirname, vector<string>* result) {
       if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
         continue;
       }
+      // filesystems aren't required to implement d_type and return DT_UNKNOWN
+      if (ent->d_type == DT_UNKNOWN) {
+        struct stat statbuf;
+        stat((dirname + OS_PATH_SEPARATOR + ent->d_name).c_str(), &statbuf);
+        if(S_ISREG(statbuf.st_mode)) {
+          ent->d_type = DT_REG;
+        } else if (S_ISDIR(statbuf.st_mode)) {
+          ent->d_type = DT_DIR;
+        }
+      }
       if (ent->d_type == DT_REG) {
         result->emplace_back(dirname + OS_PATH_SEPARATOR + ent->d_name);
       } else if (ent->d_type == DT_DIR) {
