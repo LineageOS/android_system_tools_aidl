@@ -1111,6 +1111,13 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
     if (variable->GetDefaultValue()) {
       out << " = " << cppType.c_str() << "(" << variable->ValueString(ConstantValueDecorator)
           << ")";
+    } else if (auto type = typenames.TryGetDefinedType(variable->GetType().GetName()); type) {
+      if (auto enum_type = type->AsEnumDeclaration(); enum_type) {
+        if (!variable->GetType().IsArray()) {
+          // if an enum doesn't have explicit default value, do zero-initialization
+          out << " = " << cppType << "(0)";
+        }
+      }
     }
     out << ";\n";
 
