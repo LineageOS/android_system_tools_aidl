@@ -158,5 +158,16 @@ parcelable StructuredParcelable {
     // String expressions
     @utf8InCpp String addString1 = "hello" + " world!";
     @utf8InCpp String addString2 = "The quick brown fox jumps " + "over the lazy dog.";
+
+    // primitive types will be initialized with {}.
+    boolean aBoolean;
+    byte aByte;
+    char aChar;
+    int anInt;
+    long aLong;
+    float aFloat;
+    double aDouble;
+    // arrays are not primitive type.
+    int[] anIntArray;
 }
 

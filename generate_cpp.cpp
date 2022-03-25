@@ -1118,6 +1118,9 @@ std::unique_ptr<Document> BuildParcelHeader(const AidlTypenames& typenames,
           out << " = " << cppType << "(0)";
         }
       }
+    } else if (AidlTypenames::IsPrimitiveTypename(variable->GetType().GetName()) &&
+               !variable->GetType().IsArray()) {
+      out << " = {}";
     }
     out << ";\n";
 
