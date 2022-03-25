@@ -1021,6 +1021,9 @@ std::unique_ptr<Document> BuildParcelHeader(const TypeNamespace& /*types*/,
     if (variable->GetDefaultValue()) {
       out << " = " << type->CppType().c_str() << "("
           << variable->ValueString(ConstantValueDecorator) << ")";
+    } else if (AidlTypenames::IsPrimitiveTypename(variable->GetType().GetName()) &&
+               !variable->GetType().IsArray()) {
+      out << " = {}";
     }
     out << ";\n";
 
