@@ -774,6 +774,9 @@ void GenerateParcelHeader(CodeWriter& out, const AidlTypenames& types,
     out << NdkNameOf(types, variable->GetType(), StorageMode::STACK) << " " << variable->GetName();
     if (variable->GetDefaultValue()) {
       out << " = " << variable->ValueString(AidlConstantValueDecorator);
+    } else if (AidlTypenames::IsPrimitiveTypename(variable->GetType().GetName()) &&
+               !variable->GetType().IsArray()) {
+      out << " = {}";
     }
     out << ";\n";
   }

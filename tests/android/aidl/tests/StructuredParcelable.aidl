@@ -36,4 +36,15 @@ parcelable StructuredParcelable {
     double checkDoubleFromFloat = 3.14f;
     String[] checkStringArray1 = { "a", "b" };
     @utf8InCpp String[] checkStringArray2 = { "a", "b" };
+
+    // primitive types will be initialized with {}.
+    boolean aBoolean;
+    byte aByte;
+    char aChar;
+    int anInt;
+    long aLong;
+    float aFloat;
+    double aDouble;
+    // arrays are not primitive type.
+    int[] anIntArray;
 }
